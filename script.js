@@ -1,6 +1,6 @@
 /**
  * PDI MASTER - SISTEMA COMPLETO
- * Versão Final com Sub-tarefas e Progresso por Meta
+ * Versão Final com Áreas de Interesse Otimizadas
  */
 
 const FirebaseService = window.FirebaseService;
@@ -10,15 +10,15 @@ const defaultData = {
         nome: "Laís Mendes",
         cargo: "Assistente Ambiental",
         lider: "Lizabeth Silva",
-        ciclo: "Março/2026",
+        ciclo: "Março/26",
         tipoAvaliacao: "180º",
         empresaArea: "Geoambiental"
     },
     areasInteresse: [
-        { nome: "Geoprocessamento", conteudos: "QGIS, ArcGIS, Sensoriamento Remoto, Análise Espacial", updatedAt: Date.now() },
-        { nome: "Análise de Dados", conteudos: "Python, R, Estatística, Visualização de Dados", updatedAt: Date.now() },
-        { nome: "Tecnologia", conteudos: "Automação, Machine Learning, Big Data", updatedAt: Date.now() },
-        { nome: "Inovação", conteudos: "Design Thinking, Inovação Aberta, Sustentabilidade", updatedAt: Date.now() }
+        { nome: "Geoprocessamento", conteudos: "QGIS, ArcGIS, Sensoriamento Remoto, Análise Espacial", updatedAt: Date.now(), contentsCollapsed: true },
+        { nome: "Análise de Dados", conteudos: "Python, R, Estatística, Visualização de Dados", updatedAt: Date.now(), contentsCollapsed: true },
+        { nome: "Tecnologia", conteudos: "Automação, Machine Learning, Big Data", updatedAt: Date.now(), contentsCollapsed: true },
+        { nome: "Inovação", conteudos: "Design Thinking, Inovação Aberta, Sustentabilidade", updatedAt: Date.now(), contentsCollapsed: true }
     ],
     avaliacao: {
         comportamental: [
@@ -67,6 +67,7 @@ let processedData = null;
 // UI Controller
 const UI = {
     currentSection: 'dashboard',
+    expandedMetas: {},
 
     async init() {
         console.log('🚀 Inicializando PDI Master...');
@@ -83,7 +84,8 @@ const UI = {
                 avaliacao: defaultData.avaliacao,
                 areasInteresse: loadedData.areasInteresse?.map(a => ({
                     ...a,
-                    conteudos: a.conteudos || ''
+                    conteudos: a.conteudos || '',
+                    contentsCollapsed: a.contentsCollapsed !== undefined ? a.contentsCollapsed : true
                 })) || defaultData.areasInteresse,
                 pdi: loadedData.pdi?.map(p => ({
                     ...p,
@@ -438,8 +440,9 @@ const UI = {
         const plan60 = document.getElementById('plan-60');
         const plan90 = document.getElementById('plan-90');
         const mentorInsight = document.getElementById('mentor-insight');
-  
-        if(mentorInsight) mentorInsight.textContent = "Sua técnica é sólida Laís. Desenvolva mais as ideias e comunicação.";
+        
+
+        if(mentorInsight) mentorInsight.textContent = "Sua técnica é sólida, Laís. Nececssita desenvolver mais a parte de comunicação.";
     },
 
     // === ÁREAS DE INTERESSE ===
@@ -465,57 +468,79 @@ const UI = {
             const card = document.createElement('div');
             card.className = 'interest-card';
             const hasContents = area.conteudos && area.conteudos.trim() !== '';
+            const isContentsCollapsed = area.contentsCollapsed !== false;
             
             card.innerHTML = `
-                <div class="interest-card-header">
-                    <div>
+                <div class="interest-card-header" onclick="UI.toggleAreaCard(${index})">
+                    <div class="interest-card-header-left">
                         <h4>${area.nome}</h4>
                         <span class="interest-status ${hasContents ? 'has-contents' : 'no-contents'}">
-                            ${hasContents ? '<i class="ph ph-check-circle"></i> Conteúdos salvos' : '<i class="ph ph-warning"></i> Sem conteúdos'}
+                            <i class="ph ${hasContents ? 'ph-check-circle' : 'ph-warning'}"></i>
+                            ${hasContents ? 'Conteúdos salvos' : 'Sem conteúdos'}
                         </span>
                     </div>
-                    <button class="btn-delete-small" onclick="UI.removeInterest(${index})" title="Excluir área">
+                    <button class="btn-delete-small" onclick="event.stopPropagation(); UI.removeInterest(${index})" title="Excluir área">
                         <i class="ph ph-trash"></i>
                     </button>
                 </div>
                 
-                <div class="interest-input-section">
-                    <label for="conteudos-${index}">
-                        <i class="ph ph-books"></i>
-                        Conteúdos que mais me interesso:
-                    </label>
-                    <textarea 
-                        id="conteudos-${index}" 
-                        placeholder="Ex: QGIS, ArcGIS, Sensoriamento Remoto, Python para GIS..."
-                        rows="3"
-                    >${area.conteudos || ''}</textarea>
-                    <button class="save-contents-btn" onclick="UI.saveInterestContents(${index})">
-                        <i class="ph ph-floppy-disk"></i>
-                        Salvar Conteúdos
-                    </button>
+                <div class="interest-card-body">
+                    <div class="interest-input-section">
+                        <label for="conteudos-${index}">
+                            <i class="ph ph-books"></i>
+                            Conteúdos que mais me interesso:
+                        </label>
+                        <textarea 
+                            id="conteudos-${index}" 
+                            placeholder="Ex: QGIS, ArcGIS, Sensoriamento Remoto, Python para GIS..."
+                            rows="3"
+                            onclick="event.stopPropagation()"
+                        >${area.conteudos || ''}</textarea>
+                        <button class="save-contents-btn" onclick="event.stopPropagation(); UI.saveInterestContents(${index})">
+                            <i class="ph ph-floppy-disk"></i>
+                            Salvar Conteúdos
+                        </button>
+                    </div>
+                    
+                    ${hasContents ? `
+                    <div class="interest-contents-display">
+                        <div class="contents-toggle-header" onclick="event.stopPropagation(); UI.toggleContents(${index})">
+                            <div class="contents-header">
+                                <i class="ph ph-check-circle"></i>
+                                <strong>Conteúdos Salvos:</strong>
+                            </div>
+                            <i class="ph ph-caret-down contents-toggle-icon ${isContentsCollapsed ? 'collapsed' : ''}"></i>
+                        </div>
+                        <div class="contents-body ${isContentsCollapsed ? 'collapsed' : ''}">
+                            <div class="contents-list">
+                                ${this.parseContentsToList(area.conteudos)}
+                            </div>
+                            <div class="contents-footer">
+                                <span class="last-update">
+                                    <i class="ph ph-clock"></i>
+                                    ${area.updatedAt ? new Date(area.updatedAt).toLocaleDateString('pt-BR') : 'Hoje'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
-                
-                ${hasContents ? `
-                <div class="interest-contents-display">
-                    <div class="contents-header">
-                        <i class="ph ph-check-circle"></i>
-                        <strong>Conteúdos Salvos:</strong>
-                    </div>
-                    <div class="contents-list">
-                        ${this.parseContentsToList(area.conteudos)}
-                    </div>
-                    <div class="contents-footer">
-                        <span class="last-update">
-                            <i class="ph ph-clock"></i>
-                            ${area.updatedAt ? new Date(area.updatedAt).toLocaleDateString('pt-BR') : 'Hoje'}
-                        </span>
-                    </div>
-                </div>
-                ` : ''}
             `;
             grid.appendChild(card);
         });
         this.updateBadges();
+    },
+
+    toggleAreaCard(index) {
+        // Opcional: implementar toggle do card inteiro se necessário
+        console.log('Toggle area card:', index);
+    },
+
+    toggleContents(index) {
+        if(appData.areasInteresse[index]) {
+            appData.areasInteresse[index].contentsCollapsed = !appData.areasInteresse[index].contentsCollapsed;
+            this.renderInterests();
+        }
     },
 
     parseContentsToList(contents) {
@@ -583,7 +608,7 @@ const UI = {
 
     async addInterestSuggestion(area) {
         if(!appData.areasInteresse.find(a => a.nome === area)) {
-            appData.areasInteresse.push({ nome: area, conteudos: '', createdAt: Date.now() });
+            appData.areasInteresse.push({ nome: area, conteudos: '', createdAt: Date.now(), contentsCollapsed: true });
             if(FirebaseService?.setLoading) FirebaseService.setLoading(true);
             await FirebaseService?.saveData?.(appData);
             if(FirebaseService?.setLoading) FirebaseService.setLoading(false);
@@ -626,8 +651,13 @@ const UI = {
         if(countAttention) countAttention.textContent = processedData.insights.critical.length;
     },
 
-    // === PDI COM SUB-TAREFAS E PROGRESSO ===
+    // === PDI COM SUB-TAREFAS E METAS RECOLHÍVEIS ===
     
+    toggleMeta(metaId) {
+        this.expandedMetas[metaId] = !this.expandedMetas[metaId];
+        this.renderPDIList();
+    },
+
     calcularProgresso(meta) {
         if(!meta.acoes || meta.acoes.length === 0) {
             meta.progresso = 0;
@@ -645,91 +675,78 @@ const UI = {
         const pdiList = appData.pdi || [];
         
         if(pdiList.length === 0) {
-            container.innerHTML = `
-                <div class="text-center" style="padding: 3rem; color: var(--text-muted);">
-                    <i class="ph ph-target" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                    <p>Nenhuma meta cadastrada ainda.<br>Comece adicionando sua primeira meta!</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="text-center" style="padding: 3rem; color: var(--text-muted);"><i class="ph ph-target" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i><p>Nenhuma meta cadastrada ainda.<br>Comece adicionando sua primeira meta!</p></div>';
             return;
         }
 
         pdiList.forEach((meta, index) => {
             this.calcularProgresso(meta);
+            const isExpanded = this.expandedMetas[meta.id] || false;
             
             const div = document.createElement('div');
             div.className = 'pdi-item';
             
-            const progressoCor = meta.progresso === 100 ? 'var(--success)' : 
-                                meta.progresso >= 50 ? 'var(--warning)' : 'var(--primary)';
+            const progressoCor = meta.progresso === 100 ? 'var(--success)' : meta.progresso >= 50 ? 'var(--warning)' : 'var(--primary)';
             
-            div.innerHTML = `
-                <div class="pdi-item-header">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span class="pdi-tag ${meta.priority}">${meta.priority}</span>
-                        <span class="pdi-tag" style="background: #dbeafe; color: #1e40af;">${meta.area}</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 0.875rem; font-weight: 600; color: ${progressoCor}">
-                            ${meta.progresso}% concluído
-                        </span>
-                        <button class="btn-delete" onclick="UI.deletePDI(${index})" title="Excluir">
-                            <i class="ph ph-trash"></i>
-                        </button>
-                    </div>
-                </div>
+            let html = '<div class="pdi-item-header" onclick="UI.toggleMeta(\'' + meta.id + '\')">';
+            html += '<div class="pdi-item-header-content">';
+            html += '<h4>' + meta.goal + '</h4>';
+            html += '<div class="pdi-item-header-top">';
+            html += '<span class="pdi-tag ' + meta.priority + '">' + meta.priority + '</span>';
+            html += '<span class="pdi-tag" style="background: #dbeafe; color: #1e40af;">' + meta.area + '</span>';
+            html += '<i class="ph ' + (isExpanded ? 'ph-caret-down' : 'ph-caret-right') + '" style="color: var(--text-muted);"></i>';
+            html += '</div></div>';
+            
+            html += '<div class="pdi-item-header-right">';
+            html += '<span style="color: ' + progressoCor + '">' + meta.progresso + '% concluído</span>';
+            html += '<button class="btn-delete" onclick="event.stopPropagation(); UI.deletePDI(' + index + ')" title="Excluir">';
+            html += '<i class="ph ph-trash"></i></button></div></div>';
+            
+            if(!isExpanded) {
+                html += '<div class="pdi-collapsed-info">';
+                html += '<div class="pdi-collapsed-info-inner">';
+                html += '<span><i class="ph ph-list-checks"></i> ' + (meta.acoes?.length || 0) + ' ações (' + (meta.acoes?.filter(a => a.concluida).length || 0) + ' concluídas)</span>';
+                html += '<span><i class="ph ph-calendar"></i> ' + new Date(meta.deadline).toLocaleDateString('pt-BR') + '</span>';
+                html += '</div></div>';
+            } else {
+                html += '<div class="pdi-item-content">';
+                html += '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">' + (meta.actions || 'Nenhuma ação descrita') + '</p>';
+                html += '<div class="pdi-progress-bar" style="margin-bottom: 1.5rem;"><div class="pdi-progress-fill" style="width: ' + meta.progresso + '%; background: ' + progressoCor + '"></div></div>';
+                html += '<div class="pdi-acoes-section">';
+                html += '<div class="pdi-acoes-header">';
+                html += '<h5 style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);"><i class="ph ph-check-square" style="color: var(--primary);"></i> Ações / Sub-tarefas</h5>';
+                html += '<button class="btn-add-acao" onclick="event.stopPropagation(); UI.showAddAcaoModal(\'' + meta.id + '\')">';
+                html += '<i class="ph ph-plus"></i> Adicionar Ação</button></div>';
                 
-                <h4 style="margin-bottom: 0.5rem;">${meta.goal}</h4>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">${meta.actions || 'Nenhuma ação descrita'}</p>
+                if(meta.acoes && meta.acoes.length > 0) {
+                    html += '<div class="pdi-acoes-list" id="acoes-' + meta.id + '">';
+                    meta.acoes.forEach(acao => {
+                        html += '<div class="pdi-acao-item ' + (acao.concluida ? 'concluida' : '') + '" onclick="event.stopPropagation(); UI.toggleAcao(\'' + meta.id + '\', \'' + acao.id + '\')">';
+                        html += '<i class="ph ' + (acao.concluida ? 'ph-check-circle' : 'ph-circle') + '"></i>';
+                        html += '<span>' + acao.texto + '</span>';
+                        html += '<button class="btn-delete-acao" onclick="event.stopPropagation(); UI.deleteAcao(\'' + meta.id + '\', \'' + acao.id + '\')">';
+                        html += '<i class="ph ph-x"></i></button></div>';
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<div class="pdi-acoes-list" id="acoes-' + meta.id + '">';
+                    html += '<p style="color: var(--text-muted); font-size: 0.875rem; padding: 0.5rem 0;">Nenhuma ação cadastrada. Clique em "Adicionar Ação" para começar!</p></div>';
+                }
                 
-                <!-- Barra de Progresso -->
-                <div class="pdi-progress-bar" style="margin-bottom: 1rem;">
-                    <div class="pdi-progress-fill" style="width: ${meta.progresso}%; background: ${progressoCor}"></div>
-                </div>
+                html += '<div class="pdi-add-acao-rapido" onclick="event.stopPropagation();">';
+                html += '<input type="text" id="input-acao-' + meta.id + '" placeholder="Digite uma nova ação e pressione Enter..." onkeypress="if(event.key === \'Enter\') UI.addAcaoRapida(\'' + meta.id + '\')" />';
+                html += '<button onclick="UI.addAcaoRapida(\'' + meta.id + '\')"><i class="ph ph-plus"></i></button></div></div>';
                 
-                <!-- Sub-tarefas/Ações -->
-                <div class="pdi-acoes-section">
-                    <div class="pdi-acoes-header">
-                        <h5 style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
-                            <i class="ph ph-check-square" style="color: var(--primary);"></i>
-                            Ações / Sub-tarefas
-                        </h5>
-                        <button class="btn-add-acao" onclick="UI.showAddAcaoModal('${meta.id}')">
-                            <i class="ph ph-plus"></i>
-                            Adicionar Ação
-                        </button>
-                    </div>
-                    
-                    <div class="pdi-acoes-list" id="acoes-${meta.id}">
-                        ${meta.acoes && meta.acoes.length > 0 ? meta.acoes.map(acao => `
-                            <div class="pdi-acao-item ${acao.concluida ? 'concluida' : ''}" onclick="UI.toggleAcao('${meta.id}', '${acao.id}')">
-                                <i class="ph ${acao.concluida ? 'ph-check-circle' : 'ph-circle'}"></i>
-                                <span>${acao.texto}</span>
-                                <button class="btn-delete-acao" onclick="event.stopPropagation(); UI.deleteAcao('${meta.id}', '${acao.id}')">
-                                    <i class="ph ph-x"></i>
-                                </button>
-                            </div>
-                        `).join('') : '<p style="color: var(--text-muted); font-size: 0.875rem; padding: 0.5rem 0;">Nenhuma ação cadastrada. Clique em "Adicionar Ação" para começar!</p>'}
-                    </div>
-                    
-                    <!-- Input rápido para nova ação -->
-                    <div class="pdi-add-acao-rapido">
-                        <input type="text" 
-                               id="input-acao-${meta.id}" 
-                               placeholder="Digite uma nova ação e pressione Enter..."
-                               onkeypress="if(event.key === 'Enter') UI.addAcaoRapida('${meta.id}')" />
-                        <button onclick="UI.addAcaoRapida('${meta.id}')">
-                            <i class="ph ph-plus"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="pdi-meta">
-                    <span><i class="ph ph-calendar"></i> ${new Date(meta.deadline).toLocaleDateString('pt-BR')}</span>
-                    <span><i class="ph ph-check-circle"></i> ${meta.status}</span>
-                    ${meta.indicator ? `<span><i class="ph ph-flag"></i> ${meta.indicator}</span>` : ''}
-                </div>
-            `;
+                html += '<div class="pdi-meta" style="margin-top: 1rem;">';
+                html += '<span><i class="ph ph-calendar"></i> ' + new Date(meta.deadline).toLocaleDateString('pt-BR') + '</span>';
+                html += '<span><i class="ph ph-check-circle"></i> ' + meta.status + '</span>';
+                if(meta.indicator) {
+                    html += '<span><i class="ph ph-flag"></i> ' + meta.indicator + '</span>';
+                }
+                html += '</div></div>';
+            }
+            
+            div.innerHTML = html;
             container.appendChild(div);
         });
     },
@@ -771,7 +788,7 @@ const UI = {
     },
 
     async addAcaoRapida(metaId) {
-        const input = document.getElementById(`input-acao-${metaId}`);
+        const input = document.getElementById('input-acao-' + metaId);
         const texto = input?.value.trim();
         
         if(!texto) return;
@@ -871,7 +888,7 @@ const UI = {
                 
                 if(value !== '') {
                     if(!appData.areasInteresse?.find(a => a.nome === value)) {
-                        appData.areasInteresse.push({ nome: value, conteudos: '', createdAt: Date.now() });
+                        appData.areasInteresse.push({ nome: value, conteudos: '', createdAt: Date.now(), contentsCollapsed: true });
                         
                         if(FirebaseService?.setLoading) FirebaseService.setLoading(true);
                         await FirebaseService?.saveData?.(appData);
@@ -962,7 +979,7 @@ const Analytics = {
                 return { ...item, media, gap, area };
             });
             const items = processed.avaliacao[area];
-            processed[`${area}Media`] = items.length > 0 ? (areaSum / items.length).toFixed(2) : '0.00';
+            processed[area + 'Media'] = items.length > 0 ? (areaSum / items.length).toFixed(2) : '0.00';
             allItems = [...allItems, ...items];
         });
 
