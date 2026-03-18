@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDI Master - Sistema de Desenvolvimento</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <i class="ph ph-spinner-gap"></i>
+            <span>Sincronizando...</span>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="ph ph-chart-polar"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>PDI</h1>
+                </div>
+            </div>
+
+            <div class="sync-status" id="sync-status">
+                <i class="ph ph-cloud-check"></i>
+                <span>Sincronizado</span>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-section">
+                    <span class="nav-section-title">Principal</span>
+                    <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                        <i class="ph ph-squares-four"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#analise" class="nav-item" data-section="analise">
+                        <i class="ph ph-brain"></i>
+                        <span>Análise Inteligente</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Desempenho</span>
+                    <a href="#pontos-fortes" class="nav-item" data-section="pontos-fortes">
+                        <i class="ph ph-trophy"></i>
+                        <span>Pontos Fortes</span>
+                        <span class="badge success" id="badge-strong">0</span>
+                    </a>
+                    <a href="#pontos-atencão" class="nav-item" data-section="pontos-atencão">
+                        <i class="ph ph-warning-circle"></i>
+                        <span>Pontos de Atenção</span>
+                        <span class="badge warning" id="badge-attention">0</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Planejamento</span>
+                    <a href="#mentoria" class="nav-item" data-section="mentoria">
+                        <i class="ph ph-chalkboard-teacher"></i>
+                        <span>Mentoria</span>
+                    </a>
+                    <a href="#meu-pdi" class="nav-item" data-section="meu-pdi">
+                        <i class="ph ph-target"></i>
+                        <span>Meu PDI</span>
+                    </a>
+                    <a href="#areas-interesse" class="nav-item" data-section="areas-interesse">
+                        <i class="ph ph-star"></i>
+                        <span>Áreas de Interesse</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">LM</div>
+                    <div class="user-info">
+                        <span class="user-name" id="sidebar-user-name">Laís Mendes</span>
+                        <span class="user-role" id="sidebar-user-role">Assistente Ambiental</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="ph ph-list"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span id="page-title">Dashboard</span>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="header-stats">
+                        <div class="stat-pill">
+                            <i class="ph ph-chart-line-up"></i>
+                            <span>Média: <strong id="header-media-geral">--</strong></span>
+                        </div>
+                        <div class="stat-pill">
+                            <i class="ph ph-calendar"></i>
+                            <span id="header-ciclo">--</span>
+                        </div>
+                    </div>
+                    <button class="btn-icon" id="btn-sync" title="Sincronizar agora">
+                        <i class="ph ph-arrows-clockwise"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                
+                <section id="dashboard" class="content-section active">
+                    <div class="section-header">
+                        <div>
+                            <h2>Visão Geral de Desempenho</h2>
+                            <p>Acompanhe suas métricas principais e evolução</p>
+                        </div>
+                        <button class="btn-outline" onclick="window.print()">
+                            <i class="ph ph-printer"></i>
+                            Exportar
+                        </button>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="card kpi-card primary">
+                            <div class="kpi-icon">
+                                <i class="ph ph-users"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Comportamental</span>
+                                <span class="kpi-value" id="kpi-behavioral">--</span>
+                                <span class="kpi-trend positive">
+                                    <i class="ph ph-trend-up"></i>
+                                    <span>Bom desempenho</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card kpi-card secondary">
+                            <div class="kpi-icon">
+                                <i class="ph ph-code"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Técnica</span>
+                                <span class="kpi-value" id="kpi-technical">--</span>
+                                <span class="kpi-trend positive">
+                                    <i class="ph ph-trend-up"></i>
+                                    <span>Excelente</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card kpi-card tertiary">
+                            <div class="kpi-icon">
+                                <i class="ph ph-buildings"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Organizacional</span>
+                                <span class="kpi-value" id="kpi-organizational">--</span>
+                                <span class="kpi-trend neutral">
+                                    <i class="ph ph-minus"></i>
+                                    <span>Estável</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card kpi-card alert">
+                            <div class="kpi-icon">
+                                <i class="ph ph-warning"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Área Crítica</span>
+                                <span class="kpi-value text" id="kpi-critical">--</span>
+                                <span class="kpi-trend negative">
+                                    <i class="ph ph-arrow-down"></i>
+                                    <span>Requer atenção</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="card chart-card full-width-chart">
+                            <div class="card-header">
+                                <h3><i class="ph ph-chart-radar"></i> Mapa de Competências</h3>
+                                <div class="chart-legend">
+                                    <span class="legend-item"><span class="legend-dot" style="background: #4f46e5;"></span> Sua Avaliação</span>
+                                    <span class="legend-item"><span class="legend-dot" style="background: #10b981;"></span> Avaliação Líder</span>
+                                </div>
+                            </div>
+                            <div class="chart-container radar-container">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-chart-bar"></i> Comparativo por Área</h3>
+                            </div>
+                            <div class="chart-container" id="area-comparison"></div>
+                        </div>
+
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-arrows-left-right"></i> Principais Gaps</h3>
+                            </div>
+                            <div class="gaps-list" id="gaps-list"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="analise" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Análise Inteligente</h2>
+                            <p>Diagnóstico detalhado do seu desempenho</p>
+                        </div>
+                    </div>
+
+                    <div class="analysis-grid">
+                        <div class="card full-width">
+                            <div class="card-header">
+                                <h3><i class="ph ph-robot"></i> Resumo Executivo</h3>
+                            </div>
+                            <div id="executive-summary" class="text-content"></div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-trophy"></i> Pontos Fortes</h3>
+                                <span class="badge success" id="count-strong">0</span>
+                            </div>
+                            <ul id="strengths-list" class="insight-list"></ul>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-warning"></i> Pontos de Atenção</h3>
+                                <span class="badge warning" id="count-attention">0</span>
+                            </div>
+                            <ul id="attention-list" class="insight-list"></ul>
+                        </div>
+
+                        <div class="card full-width">
+                            <div class="card-header">
+                                <h3><i class="ph ph-scales"></i> Desalinhamentos (Gaps)</h3>
+                                <p class="subtitle">Onde sua percepção difere significativamente da liderança</p>
+                            </div>
+                            <div id="gaps-container" class="gaps-grid"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pontos-fortes" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Pontos Fortes</h2>
+                            <p>Suas principais competências e diferenciais</p>
+                        </div>
+                    </div>
+                    <div class="strengths-container" id="strengths-detailed"></div>
+                </section>
+
+                <section id="pontos-atencão" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Pontos de Atenção</h2>
+                            <p>Áreas que necessitam desenvolvimento</p>
+                        </div>
+                    </div>
+                    <div class="attention-container" id="attention-detailed"></div>
+                </section>
+
+                <section id="mentoria" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Mentoria de Carreira</h2>
+                            <p>Plano de desenvolvimento orientado com ações práticas</p>
+                        </div>
+                    </div>
+
+                    <div class="mentorship-timeline">
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <div class="time-badge">30 Dias</div>
+                                <i class="ph ph-rocket-launch"></i>
+                            </div>
+                            <h3>Foco Imediato</h3>
+                            <p id="plan-30">--</p>
+                            
+                            <div class="action-section">
+                                <h4><i class="ph ph-book-open"></i> Ações Recomendadas</h4>
+                                <ul class="action-list">
+                                    <li>
+                                        <i class="ph ph-video"></i>
+                                        <div>
+                                            <strong>Curso: Comunicação Assertiva</strong>
+                        
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="ph ph-chats-circle"></i>
+                                        <div>
+                                            <strong>Feedbacks</strong>
+                                        
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="ph ph-notebook"></i>
+                                        <div>
+                                            <strong>Leitura: "Inovação e Proatividade"</strong>
+                                    
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="timeline-actions">
+                                <button class="btn-sm btn-primary">Iniciar</button>
+                            </div>
+                        </div>
+
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <div class="time-badge primary">60 Dias</div>
+                                <i class="ph ph-trend-up"></i>
+                            </div>
+                            <h3>Consolidação</h3>
+                            <p id="plan-60">--</p>
+                            
+                            <div class="action-section">
+                                <h4><i class="ph ph-book-open"></i> Ações Recomendadas</h4>
+                                <ul class="action-list">
+                                    <li>
+                                        <i class="ph ph-video"></i>
+                                        <div>
+                                            <strong>Curso: Gestão de Projetos Ágeis</strong>
+                                    
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="ph ph-users"></i>
+                                        <div>
+                                            <strong>Planejar Projeto Técnico</strong>
+                                        
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="ph ph-lightbulb"></i>
+                                        <div>
+                                            <strong>Workshop: Inovação Prática</strong>
+                                           
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="timeline-actions">
+                                <button class="btn-sm btn-outline">Acompanhar</button>
+                            </div>
+                        </div>
+
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <div class="time-badge secondary">90 Dias</div>
+                                <i class="ph ph-star"></i>
+                            </div>
+                            <h3>Expansão</h3>
+                            <p id="plan-90">--</p>
+                            
+                            <div class="action-section">
+                                <h4><i class="ph ph-book-open"></i> Ações Recomendadas</h4>
+                                <ul class="action-list">
+                                    <li>
+                                        <i class="ph ph-video"></i>
+                                        <div>
+                                            <strong>Curso: Análise de Dados Avançada</strong>
+                                        
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="ph ph-presentation"></i>
+                                        <div>
+                                            <strong>Apresentar Proposta de Melhoria</strong>
+                                         
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="ph ph-certificate"></i>
+                                        <div>
+                                            <strong>Certificação: Profissional</strong>
+                                         
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="timeline-actions">
+                                <button class="btn-sm btn-outline">Planejar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mentorship-tip">
+                        <div class="tip-header">
+                            <i class="ph ph-lightbulb"></i>
+                            <h3>Insight do Mentor</h3>
+                        </div>
+                        <p id="mentor-insight">--</p>
+                    </div>
+                </section>
+
+                <section id="meu-pdi" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Plano de Ação (PDI)</h2>
+                            <p>Defina e acompanhe suas metas de desenvolvimento</p>
+                        </div>
+                    </div>
+
+                    <div class="pdi-container">
+                        <div class="card pdi-form-card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-plus-circle"></i> Nova Meta</h3>
+                            </div>
+                            <form id="pdi-form">
+                                <div class="form-group">
+                                    <label>Meta / Objetivo</label>
+                                    <input type="text" id="pdi-goal" placeholder="Ex: Melhorar comunicação em reuniões" required>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Prioridade</label>
+                                        <select id="pdi-priority">
+                                            <option value="Alta">Alta</option>
+                                            <option value="Média" selected>Média</option>
+                                            <option value="Baixa">Baixa</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Área</label>
+                                        <select id="pdi-area">
+                                            <option value="Comportamental">Comportamental</option>
+                                            <option value="Técnica">Técnica</option>
+                                            <option value="Organizacional">Organizacional</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Prazo</label>
+                                        <input type="date" id="pdi-deadline" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status</label>
+                                        <select id="pdi-status">
+                                            <option value="Não iniciado">Não iniciado</option>
+                                            <option value="Em andamento">Em andamento</option>
+                                            <option value="Concluído">Concluído</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Ações Práticas</label>
+                                    <textarea id="pdi-actions" rows="3" placeholder="Descreva as ações específicas para alcançar esta meta..." required></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Indicador de Sucesso</label>
+                                    <input type="text" id="pdi-indicator" placeholder="Como você saberá que alcançou?">
+                                </div>
+
+                                <button type="submit" class="btn-primary btn-full" id="btn-add-pdi">
+                                    <i class="ph ph-plus"></i>
+                                    Adicionar ao Plano
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="card pdi-list-card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-list-checks"></i> Minhas Metas</h3>
+                                <div class="filter-tabs">
+                                    <button class="tab active" data-filter="all">Todas</button>
+                                    <button class="tab" data-filter="Alta">Alta Prioridade</button>
+                                    <button class="tab" data-filter="Em andamento">Em Andamento</button>
+                                </div>
+                            </div>
+                            <div id="pdi-list"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="areas-interesse" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Áreas de Interesse</h2>
+                            <p>Gerencie suas áreas de interesse e conteúdos específicos</p>
+                        </div>
+                    </div>
+
+                    <div class="interests-manager">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ph ph-plus-circle"></i> Adicionar Nova Área</h3>
+                            </div>
+                            <div class="add-interest-form">
+                                <div class="form-row">
+                                    <div class="form-group flex-grow">
+                                        <input type="text" id="new-interest" placeholder="Digite o nome da área de interesse..." />
+                                    </div>
+                                    <button type="button" id="btn-add-interest" class="btn-primary">
+                                        <i class="ph ph-plus"></i>
+                                        Adicionar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="interests-grid" id="interests-grid"></div>
+
+                        <div class="card interests-suggestions">
+                            <div class="card-header">
+                                <h3><i class="ph ph-lightbulb"></i> Sugestões Populares</h3>
+                            </div>
+                            <div class="suggestions-tags">
+                                <span class="tag-suggestion" onclick="UI.addInterestSuggestion('Gestão de Projetos')">Gestão de Projetos</span>
+                                <span class="tag-suggestion" onclick="UI.addInterestSuggestion('Liderança')">Liderança</span>
+                                <span class="tag-suggestion" onclick="UI.addInterestSuggestion('Sustentabilidade')">Sustentabilidade</span>
+                                <span class="tag-suggestion" onclick="UI.addInterestSuggestion('Inovação')">Inovação</span>
+                                <span class="tag-suggestion" onclick="UI.addInterestSuggestion('Compliance Ambiental')">Compliance Ambiental</span>
+                                <span class="tag-suggestion" onclick="UI.addInterestSuggestion('Auditoria')">Auditoria</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <footer class="main-footer">
+                <p>&copy; PDI | DESENVOLVIDO POR LAÍS MENDES | 2026.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script type="module" src="firebase-service.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
