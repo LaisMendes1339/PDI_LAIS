@@ -10,7 +10,7 @@ const defaultData = {
         nome: "Laís Mendes",
         cargo: "Assistente Ambiental",
         lider: "Lizabeth Silva",
-        ciclo: "Janeiro/2026",
+        ciclo: "Março/2026",
         tipoAvaliacao: "180º",
         empresaArea: "Geoambiental"
     },
@@ -438,11 +438,8 @@ const UI = {
         const plan60 = document.getElementById('plan-60');
         const plan90 = document.getElementById('plan-90');
         const mentorInsight = document.getElementById('mentor-insight');
-        
-        if(plan30) plan30.textContent = `Focar em ${critical ? critical.competencia : 'comunicação assertiva'}. Agendar feedback quinzenal com a líder para alinhar expectativas de proatividade.`;
-        if(plan60) plan60.textContent = `Assumir liderança de um pequeno projeto técnico para demonstrar capacidade de gestão e inovação prática.`;
-        if(plan90) plan90.textContent = `Apresentar uma proposta de melhoria de processo baseada em dados (Geoprocessamento) para a área.`;
-        if(mentorInsight) mentorInsight.textContent = "Sua técnica é impecável, Laís. O 'pulo do gato' agora é vender suas ideias. Não espere ser convidada para inovar, traga a solução pronta.";
+  
+        if(mentorInsight) mentorInsight.textContent = "Sua técnica é sólida Laís. Desenvolva mais as ideias e comunicação.";
     },
 
     // === ÁREAS DE INTERESSE ===
