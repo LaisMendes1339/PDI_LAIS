@@ -1,6 +1,6 @@
 /**
  * PDI MASTER - SISTEMA COMPLETO
- * Versão Final - Botões Funcionais
+ * Versão Final com Sub-tarefas e Progresso por Meta
  */
 
 const FirebaseService = window.FirebaseService;
@@ -10,7 +10,7 @@ const defaultData = {
         nome: "Laís Mendes",
         cargo: "Assistente Ambiental",
         lider: "Lizabeth Silva",
-        ciclo: "Março/2026",
+        ciclo: "Janeiro/2026",
         tipoAvaliacao: "180º",
         empresaArea: "Geoambiental"
     },
@@ -85,7 +85,11 @@ const UI = {
                     ...a,
                     conteudos: a.conteudos || ''
                 })) || defaultData.areasInteresse,
-                pdi: loadedData.pdi || []
+                pdi: loadedData.pdi?.map(p => ({
+                    ...p,
+                    acoes: p.acoes || [],
+                    progresso: p.progresso || 0
+                })) || []
             };
             
             console.log('📊 appData:', appData);
@@ -218,7 +222,6 @@ const UI = {
         const angleStep = (2 * Math.PI) / areas.length;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Grid
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
         for(let level = 1; level <= 5; level++) {
@@ -235,7 +238,6 @@ const UI = {
             ctx.stroke();
         }
         
-        // Autoavaliação
         ctx.beginPath();
         ctx.strokeStyle = '#4f46e5';
         ctx.fillStyle = 'rgba(79, 70, 229, 0.2)';
@@ -252,7 +254,6 @@ const UI = {
         ctx.fill();
         ctx.stroke();
         
-        // Líder
         ctx.beginPath();
         ctx.strokeStyle = '#10b981';
         ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
@@ -269,7 +270,6 @@ const UI = {
         ctx.fill();
         ctx.stroke();
         
-        // Labels
         areas.forEach((area, i) => {
             const angle = i * angleStep - Math.PI / 2;
             const labelRadius = radius + 40;
@@ -439,22 +439,20 @@ const UI = {
         const plan90 = document.getElementById('plan-90');
         const mentorInsight = document.getElementById('mentor-insight');
         
-
-        if(mentorInsight) mentorInsight.textContent = "Possui técnica sólida. Mas deve melhorar o desenvolvimento de ideias e comunicação";
+        if(plan30) plan30.textContent = `Focar em ${critical ? critical.competencia : 'comunicação assertiva'}. Agendar feedback quinzenal com a líder para alinhar expectativas de proatividade.`;
+        if(plan60) plan60.textContent = `Assumir liderança de um pequeno projeto técnico para demonstrar capacidade de gestão e inovação prática.`;
+        if(plan90) plan90.textContent = `Apresentar uma proposta de melhoria de processo baseada em dados (Geoprocessamento) para a área.`;
+        if(mentorInsight) mentorInsight.textContent = "Sua técnica é impecável, Laís. O 'pulo do gato' agora é vender suas ideias. Não espere ser convidada para inovar, traga a solução pronta.";
     },
 
-    // === ÁREAS DE INTERESSE - FUNÇÕES CORRIGIDAS ===
+    // === ÁREAS DE INTERESSE ===
     
     renderInterests() {
         const grid = document.getElementById('interests-grid');
-        if(!grid) {
-            console.error('Grid de interesses não encontrado!');
-            return;
-        }
+        if(!grid) return;
         grid.innerHTML = '';
         
         const areasInteresse = appData.areasInteresse || [];
-        console.log('📋 Renderizando áreas:', areasInteresse);
         
         if(areasInteresse.length === 0) {
             grid.innerHTML = `
@@ -531,15 +529,10 @@ const UI = {
     },
 
     async saveInterestContents(index) {
-        console.log('💾 Salvando conteúdos do índice:', index);
-        
         const textarea = document.getElementById(`conteudos-${index}`);
         const saveBtn = textarea?.parentElement?.querySelector('.save-contents-btn');
         
-        if(!textarea || !saveBtn) {
-            console.error('Elementos não encontrados para índice:', index);
-            return;
-        }
+        if(!textarea || !saveBtn) return;
         
         const contents = textarea.value.trim();
         
@@ -550,18 +543,13 @@ const UI = {
         }
         
         if(!appData.areasInteresse?.[index]) {
-            console.error('Área não encontrada no índice:', index);
             if(FirebaseService?.showToast) FirebaseService.showToast('Erro: Área não encontrada', 'error');
             return;
         }
         
-        // Atualiza dados
         appData.areasInteresse[index].conteudos = contents;
         appData.areasInteresse[index].updatedAt = Date.now();
         
-        console.log('📝 Dados atualizados:', appData.areasInteresse[index]);
-        
-        // Loading no botão
         const originalBtnHTML = saveBtn.innerHTML;
         saveBtn.innerHTML = '<i class="ph ph-spinner-gap"></i> Salvando...';
         saveBtn.disabled = true;
@@ -571,19 +559,17 @@ const UI = {
             await FirebaseService?.saveData?.(appData);
             if(FirebaseService?.setLoading) FirebaseService.setLoading(false);
             
-            // Feedback visual
             saveBtn.innerHTML = '<i class="ph ph-check-circle"></i> Salvo com sucesso!';
             saveBtn.style.background = 'var(--success)';
             saveBtn.style.color = 'white';
             if(FirebaseService?.showToast) FirebaseService.showToast(`Conteúdos de "${appData.areasInteresse[index].nome}" salvos! ✅`);
             
-            // Re-renderiza para mostrar seção de conteúdos
             setTimeout(() => {
                 this.renderInterests();
             }, 1000);
             
         } catch (error) {
-            console.error('❌ Erro ao salvar:', error);
+            console.error('Erro ao salvar:', error);
             saveBtn.innerHTML = '<i class="ph ph-warning-circle"></i> Erro ao salvar';
             saveBtn.style.background = 'var(--danger)';
             saveBtn.style.color = 'white';
@@ -599,8 +585,6 @@ const UI = {
     },
 
     async addInterestSuggestion(area) {
-        console.log('➕ Adicionando sugestão:', area);
-        
         if(!appData.areasInteresse.find(a => a.nome === area)) {
             appData.areasInteresse.push({ nome: area, conteudos: '', createdAt: Date.now() });
             if(FirebaseService?.setLoading) FirebaseService.setLoading(true);
@@ -614,13 +598,9 @@ const UI = {
     },
 
     async removeInterest(index) {
-        console.log('🗑️ Removendo área de índice:', index);
-        
         if(!confirm('Deseja realmente remover esta área de interesse?')) return;
         
         const areaName = appData.areasInteresse[index]?.nome;
-        console.log('Removendo área:', areaName);
-        
         appData.areasInteresse.splice(index, 1);
         
         try {
@@ -630,7 +610,7 @@ const UI = {
             this.renderInterests();
             if(FirebaseService?.showToast) FirebaseService.showToast(`Área "${areaName}" removida!`);
         } catch (error) {
-            console.error('❌ Erro ao excluir:', error);
+            console.error('Erro ao excluir:', error);
             if(FirebaseService?.showToast) FirebaseService.showToast('Erro ao excluir área', 'error');
         }
     },
@@ -649,6 +629,18 @@ const UI = {
         if(countAttention) countAttention.textContent = processedData.insights.critical.length;
     },
 
+    // === PDI COM SUB-TAREFAS E PROGRESSO ===
+    
+    calcularProgresso(meta) {
+        if(!meta.acoes || meta.acoes.length === 0) {
+            meta.progresso = 0;
+            return;
+        }
+        
+        const concluidas = meta.acoes.filter(a => a.concluida).length;
+        meta.progresso = Math.round((concluidas / meta.acoes.length) * 100);
+    },
+
     renderPDIList() {
         const container = document.getElementById('pdi-list');
         if(!container) return;
@@ -665,22 +657,80 @@ const UI = {
             return;
         }
 
-        pdiList.forEach((item, index) => {
+        pdiList.forEach((meta, index) => {
+            this.calcularProgresso(meta);
+            
             const div = document.createElement('div');
             div.className = 'pdi-item';
+            
+            const progressoCor = meta.progresso === 100 ? 'var(--success)' : 
+                                meta.progresso >= 50 ? 'var(--warning)' : 'var(--primary)';
+            
             div.innerHTML = `
                 <div class="pdi-item-header">
-                    <span class="pdi-tag ${item.priority}">${item.priority}</span>
-                    <button class="btn-delete" onclick="UI.deletePDI(${index})" title="Excluir">
-                        <i class="ph ph-trash"></i>
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span class="pdi-tag ${meta.priority}">${meta.priority}</span>
+                        <span class="pdi-tag" style="background: #dbeafe; color: #1e40af;">${meta.area}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.875rem; font-weight: 600; color: ${progressoCor}">
+                            ${meta.progresso}% concluído
+                        </span>
+                        <button class="btn-delete" onclick="UI.deletePDI(${index})" title="Excluir">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                    </div>
                 </div>
-                <h4>${item.goal}</h4>
-                <p>${item.actions}</p>
+                
+                <h4 style="margin-bottom: 0.5rem;">${meta.goal}</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">${meta.actions || 'Nenhuma ação descrita'}</p>
+                
+                <!-- Barra de Progresso -->
+                <div class="pdi-progress-bar" style="margin-bottom: 1rem;">
+                    <div class="pdi-progress-fill" style="width: ${meta.progresso}%; background: ${progressoCor}"></div>
+                </div>
+                
+                <!-- Sub-tarefas/Ações -->
+                <div class="pdi-acoes-section">
+                    <div class="pdi-acoes-header">
+                        <h5 style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+                            <i class="ph ph-check-square" style="color: var(--primary);"></i>
+                            Ações / Sub-tarefas
+                        </h5>
+                        <button class="btn-add-acao" onclick="UI.showAddAcaoModal('${meta.id}')">
+                            <i class="ph ph-plus"></i>
+                            Adicionar Ação
+                        </button>
+                    </div>
+                    
+                    <div class="pdi-acoes-list" id="acoes-${meta.id}">
+                        ${meta.acoes && meta.acoes.length > 0 ? meta.acoes.map(acao => `
+                            <div class="pdi-acao-item ${acao.concluida ? 'concluida' : ''}" onclick="UI.toggleAcao('${meta.id}', '${acao.id}')">
+                                <i class="ph ${acao.concluida ? 'ph-check-circle' : 'ph-circle'}"></i>
+                                <span>${acao.texto}</span>
+                                <button class="btn-delete-acao" onclick="event.stopPropagation(); UI.deleteAcao('${meta.id}', '${acao.id}')">
+                                    <i class="ph ph-x"></i>
+                                </button>
+                            </div>
+                        `).join('') : '<p style="color: var(--text-muted); font-size: 0.875rem; padding: 0.5rem 0;">Nenhuma ação cadastrada. Clique em "Adicionar Ação" para começar!</p>'}
+                    </div>
+                    
+                    <!-- Input rápido para nova ação -->
+                    <div class="pdi-add-acao-rapido">
+                        <input type="text" 
+                               id="input-acao-${meta.id}" 
+                               placeholder="Digite uma nova ação e pressione Enter..."
+                               onkeypress="if(event.key === 'Enter') UI.addAcaoRapida('${meta.id}')" />
+                        <button onclick="UI.addAcaoRapida('${meta.id}')">
+                            <i class="ph ph-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="pdi-meta">
-                    <span><i class="ph ph-calendar"></i> ${new Date(item.deadline).toLocaleDateString('pt-BR')}</span>
-                    <span><i class="ph ph-tag"></i> ${item.area}</span>
-                    <span><i class="ph ph-check-circle"></i> ${item.status}</span>
+                    <span><i class="ph ph-calendar"></i> ${new Date(meta.deadline).toLocaleDateString('pt-BR')}</span>
+                    <span><i class="ph ph-check-circle"></i> ${meta.status}</span>
+                    ${meta.indicator ? `<span><i class="ph ph-flag"></i> ${meta.indicator}</span>` : ''}
                 </div>
             `;
             container.appendChild(div);
@@ -690,7 +740,13 @@ const UI = {
     async addPDI(meta) {
         console.log('🎯 Adicionando PDI:', meta);
         
-        const newMeta = { ...meta, id: Date.now().toString(), createdAt: Date.now() };
+        const newMeta = { 
+            ...meta, 
+            id: Date.now().toString(), 
+            createdAt: Date.now(),
+            acoes: [],
+            progresso: 0
+        };
         appData.pdi = appData.pdi || [];
         appData.pdi.push(newMeta);
         
@@ -712,14 +768,82 @@ const UI = {
             }
             if(FirebaseService?.showToast) FirebaseService.showToast('Meta adicionada ao plano! 🎯');
         } catch (error) {
-            console.error('❌ Erro ao adicionar PDI:', error);
+            console.error('Erro ao adicionar PDI:', error);
             if(FirebaseService?.showToast) FirebaseService.showToast('Erro ao adicionar meta', 'error');
         }
     },
 
-    async deletePDI(index) {
-        console.log('🗑️ Excluindo PDI de índice:', index);
+    async addAcaoRapida(metaId) {
+        const input = document.getElementById(`input-acao-${metaId}`);
+        const texto = input?.value.trim();
         
+        if(!texto) return;
+        
+        const meta = appData.pdi.find(m => m.id === metaId);
+        if(!meta) return;
+        
+        const novaAcao = {
+            id: Date.now().toString(),
+            texto: texto,
+            concluida: false,
+            createdAt: Date.now()
+        };
+        
+        meta.acoes.push(novaAcao);
+        this.calcularProgresso(meta);
+        
+        try {
+            await FirebaseService?.saveData?.(appData);
+            this.renderPDIList();
+            if(FirebaseService?.showToast) FirebaseService.showToast('Ação adicionada! ✅');
+        } catch (error) {
+            console.error('Erro ao adicionar ação:', error);
+            if(FirebaseService?.showToast) FirebaseService.showToast('Erro ao adicionar ação', 'error');
+        }
+    },
+
+    async toggleAcao(metaId, acaoId) {
+        const meta = appData.pdi.find(m => m.id === metaId);
+        if(!meta) return;
+        
+        const acao = meta.acoes.find(a => a.id === acaoId);
+        if(!acao) return;
+        
+        acao.concluida = !acao.concluida;
+        this.calcularProgresso(meta);
+        
+        try {
+            await FirebaseService?.saveData?.(appData);
+            this.renderPDIList();
+            
+            if(acao.concluida && meta.progresso === 100) {
+                if(FirebaseService?.showToast) FirebaseService.showToast('🎉 Parabéns! Meta concluída!', 'success');
+            }
+        } catch (error) {
+            console.error('Erro ao alternar ação:', error);
+        }
+    },
+
+    async deleteAcao(metaId, acaoId) {
+        if(!confirm('Deseja remover esta ação?')) return;
+        
+        const meta = appData.pdi.find(m => m.id === metaId);
+        if(!meta) return;
+        
+        meta.acoes = meta.acoes.filter(a => a.id !== acaoId);
+        this.calcularProgresso(meta);
+        
+        try {
+            await FirebaseService?.saveData?.(appData);
+            this.renderPDIList();
+            if(FirebaseService?.showToast) FirebaseService.showToast('Ação removida!');
+        } catch (error) {
+            console.error('Erro ao excluir ação:', error);
+            if(FirebaseService?.showToast) FirebaseService.showToast('Erro ao excluir ação', 'error');
+        }
+    },
+
+    async deletePDI(index) {
         if(!confirm('Deseja realmente excluir esta meta?')) return;
         
         appData.pdi.splice(index, 1);
@@ -731,7 +855,7 @@ const UI = {
             this.renderPDIList();
             if(FirebaseService?.showToast) FirebaseService.showToast('Meta excluída!');
         } catch (error) {
-            console.error('❌ Erro ao excluir PDI:', error);
+            console.error('Erro ao excluir PDI:', error);
             if(FirebaseService?.showToast) FirebaseService.showToast('Erro ao excluir meta', 'error');
         }
     },
@@ -741,20 +865,16 @@ const UI = {
         
         this.setupNavigation();
 
-        // Add Interest
         const btnAddInterest = document.getElementById('btn-add-interest');
         const inputNewInterest = document.getElementById('new-interest');
         
         if(btnAddInterest && inputNewInterest) {
             btnAddInterest.addEventListener('click', async () => {
-                console.log('🔵 Botão adicionar clicado');
                 const value = inputNewInterest.value.trim();
-                console.log('Valor digitado:', value);
                 
                 if(value !== '') {
                     if(!appData.areasInteresse?.find(a => a.nome === value)) {
                         appData.areasInteresse.push({ nome: value, conteudos: '', createdAt: Date.now() });
-                        console.log('Nova área adicionada:', value);
                         
                         if(FirebaseService?.setLoading) FirebaseService.setLoading(true);
                         await FirebaseService?.saveData?.(appData);
@@ -771,17 +891,13 @@ const UI = {
                 }
             });
             
-            // Permitir adicionar com Enter
             inputNewInterest.addEventListener('keypress', (e) => {
                 if(e.key === 'Enter') {
                     btnAddInterest.click();
                 }
             });
-        } else {
-            console.error('Botões de adicionar área não encontrados!');
         }
 
-        // PDI Form
         const pdiForm = document.getElementById('pdi-form');
         if(pdiForm) {
             pdiForm.addEventListener('submit', async (e) => {
@@ -799,7 +915,6 @@ const UI = {
             });
         }
 
-        // Filter tabs
         document.querySelectorAll('.filter-tabs .tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.filter-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -807,7 +922,6 @@ const UI = {
             });
         });
 
-        // Sync button
         const btnSync = document.getElementById('btn-sync');
         if(btnSync) {
             btnSync.addEventListener('click', async () => {
@@ -827,7 +941,6 @@ const UI = {
             });
         }
 
-        // Window resize
         window.addEventListener('resize', () => {
             if(this.currentSection === 'dashboard') this.renderCharts();
         });
